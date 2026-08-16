@@ -169,6 +169,7 @@
     }
   },
   "free_transfers": 1,
+  "last_processed_gameweek": 1,
   "transfer_history": [],
   "live_message": {
     "gameweek": 1,
@@ -181,10 +182,16 @@
     "deadline_time": "2026-08-21T17:30:00Z",
     "first_kickoff": "2026-08-21T19:00:00Z"
   },
+  "chip_expiry_warned": [],
+  "chip_check_last_date": "2026-08-16",
+  "captain_ep_history": [
+    4.0
+  ],
+  "pending_command": null,
   "gameweek_history": [],
   "processing": false,
   "telegram_offset": 310227980,
-  "last_updated": "2026-08-16T13:20:53.857612+00:00",
+  "last_updated": "2026-08-16T13:25:16.144776+00:00",
   "last_lineup_sent": {
     "gameweek": 1,
     "stage": "predicted",
@@ -201,10 +208,5 @@
       13,
       368
     ]
-  },
-  "last_processed_gameweek": 1,
-  "captain_ep_history": [
-    4.0
-  ],
-  "chip_check_last_date": "2026-08-16"
+  }
 }
