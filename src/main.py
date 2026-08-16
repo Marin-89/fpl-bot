@@ -6,13 +6,15 @@ Design: rather than sending a fresh Telegram message every time it runs,
 the bot maintains ONE "live" message per gameweek that it silently edits
 in place. A NEW message (an alert) is only sent when something actually
 worth your attention happens: a material lineup change, entering the Final
-Confirmed window, or a detected FPL deadline/fixture reschedule.
+Confirmed window, a detected FPL deadline/fixture reschedule, or a flagged
+chip opportunity (checked once per day, not every scheduler tick).
 """
 import argparse
 from datetime import datetime, timezone
 
 from . import fpl_api, filters, fixture_diff, scoring, squad_builder, lineup, state as state_mod
 from . import news, telegram_bot, deadlines, review, telegram_listener, chips as chips_mod, transfers
+from . import chip_opportunities
 
 
 def run_build_squad(budget: float):
@@ -174,6 +176,21 @@ def _run_daily_inner(state: dict):
         {**p, "_group": {1: "GK", 2: "DEF", 3: "MID", 4: "FWD"}[p["element_type"]]}
         for p in bench_players
     ]
+
+    # --- Daily chip opportunity check (once per calendar day, not every scheduler tick) ---
+    today_str = now.date().isoformat()
+    if state.get("chip_check_last_date") != today_str:
+        budget_estimate = state["squad"]["bank"] + sum(
+            p.get("sell_price", p["price_bought"]) for p in state["squad"]["players"]
+        )
+        opportunity_messages = chip_opportunities.run_daily_chip_check(
+            state, bootstrap, elements, all_fixtures, scores, ep_scores,
+            target_event["id"], squad_players, final_starters, bench_players,
+            captain_id, budget_estimate,
+        )
+        if opportunity_messages:
+            telegram_bot.send_message("*Chip opportunity check*\n\n" + "\n\n".join(opportunity_messages))
+        state["chip_check_last_date"] = today_str
 
     changes = []
     material_change = should_change and previous_xi_ids and new_xi_ids != previous_xi_ids
