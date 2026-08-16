@@ -35,8 +35,10 @@ DEFAULT_STATE = {
         "xi_ids": [],
     },
     "gameweek_history": [],
-    "telegram_update_offset": 0,  # tracks which incoming Telegram messages we've already processed
-    "run_in_progress": False,     # best-effort flag so a manual "lineup" request during a scheduled run replies politely instead of double-running
+    "processing": False,       # true while a lineup computation is in progress — used by
+                                # telegram_listener.py to answer "is it currently running?"
+    "telegram_offset": None,   # Telegram getUpdates offset, so the listener never re-processes
+                                # the same incoming message twice
     "last_updated": None,
 }
 
@@ -45,12 +47,7 @@ def load_state() -> dict:
     if not os.path.exists(STATE_PATH):
         return json.loads(json.dumps(DEFAULT_STATE))  # deep copy
     with open(STATE_PATH, "r") as f:
-        state = json.load(f)
-    # Backfill any new keys for state files saved before this feature existed.
-    for key, default in DEFAULT_STATE.items():
-        if key not in state:
-            state[key] = default
-    return state
+        return json.load(f)
 
 
 def save_state(state: dict) -> None:
