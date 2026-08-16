@@ -29,16 +29,19 @@ DEFAULT_STATE = {
     },
     "free_transfers": 1,
     "transfer_history": [],
-    "last_lineup_sent": {
+    "live_message": {          # the single "always up to date" message per gameweek
         "gameweek": None,
-        "stage": None,
-        "xi_ids": [],
+        "message_id": None,
+        "text": None,          # last text sent/edited, so we can skip no-op edits
+    },
+    "last_known_deadline": {   # used to detect FPL reschedules and alert on them
+        "gameweek": None,
+        "deadline_time": None,
+        "first_kickoff": None,
     },
     "gameweek_history": [],
-    "processing": False,       # true while a lineup computation is in progress — used by
-                                # telegram_listener.py to answer "is it currently running?"
-    "telegram_offset": None,   # Telegram getUpdates offset, so the listener never re-processes
-                                # the same incoming message twice
+    "processing": False,
+    "telegram_offset": None,
     "last_updated": None,
 }
 
@@ -47,7 +50,15 @@ def load_state() -> dict:
     if not os.path.exists(STATE_PATH):
         return json.loads(json.dumps(DEFAULT_STATE))  # deep copy
     with open(STATE_PATH, "r") as f:
-        return json.load(f)
+        loaded = json.load(f)
+    # Merge in any new default keys an older state.json might be missing,
+    # so upgrading the code doesn't require manually touching the file.
+    merged = json.loads(json.dumps(DEFAULT_STATE))
+    merged.update(loaded)
+    for key in ("live_message", "last_known_deadline"):
+        if key not in loaded:
+            merged[key] = DEFAULT_STATE[key]
+    return merged
 
 
 def save_state(state: dict) -> None:
