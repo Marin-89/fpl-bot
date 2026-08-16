@@ -11,6 +11,12 @@ stability logic on top, which is the part FPL's own numbers don't capture.
 
 Weights are a documented starting point (see spec) — meant to be tuned via
 backtesting in review.py, not treated as final.
+
+IMPORTANT: score_players() normalizes WITHIN each position group, so scores
+are only comparable position-to-position, not across positions. That's
+correct for picking your best defender vs your other defenders, but WRONG
+for captaincy, which needs to compare expected points across the whole
+squad regardless of position. Use raw_expected_points() for that instead.
 """
 
 WEIGHTS = {
@@ -49,7 +55,9 @@ def score_players(
 ) -> dict:
     """
     Returns {player_id: predicted_points_score}, comparable within a position
-    group (element_type: 1=GK, 2=DEF, 3=MID, 4=FWD).
+    group (element_type: 1=GK, 2=DEF, 3=MID, 4=FWD). NOT comparable across
+    positions — see module docstring. Used for squad-building and lineup
+    selection, where you're always choosing among same-position players.
     """
     scores = {}
     by_position: dict[int, list[dict]] = {}
@@ -73,3 +81,15 @@ def score_players(
             scores[pid] = score
 
     return scores
+
+
+def raw_expected_points(elements: list[dict]) -> dict:
+    """
+    Returns {player_id: ep_next as a raw float}, directly from FPL's own
+    expected-points-next-round figure — on a genuinely comparable scale
+    across ALL positions (unlike score_players, which is position-normalized).
+    This is what captain/vice-captain selection should use: "who has the
+    highest expected points overall", not "who stands out most within their
+    own position group".
+    """
+    return {p["id"]: _safe_float(p.get("ep_next")) for p in elements}
