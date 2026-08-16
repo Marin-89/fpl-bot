@@ -110,17 +110,17 @@
     "bank": 0.0,
     "formation": "5-4-1",
     "starting_xi_ids": [
+      480,
       1,
-      4,
-      356,
       387,
+      356,
+      4,
       388,
       389,
       426,
-      480,
+      106,
       13,
-      368,
-      106
+      368
     ],
     "bench_ids": [
       109,
@@ -156,10 +156,22 @@
   "free_transfers": 1,
   "transfer_history": [],
   "last_lineup_sent": {
-    "gameweek": null,
-    "stage": null,
-    "xi_ids": []
+    "gameweek": 1,
+    "stage": "predicted",
+    "xi_ids": [
+      480,
+      1,
+      387,
+      356,
+      4,
+      388,
+      389,
+      426,
+      106,
+      13,
+      368
+    ]
   },
   "gameweek_history": [],
-  "last_updated": "2026-08-16T10:34:00.372756+00:00"
+  "last_updated": "2026-08-16T10:36:07.185453+00:00"
 }
