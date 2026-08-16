@@ -1,0 +1,165 @@
+{
+  "squad": {
+    "players": [
+      {
+        "id": 1,
+        "name": "Raya",
+        "element_type": 1,
+        "team": 1,
+        "price_bought": 6.0
+      },
+      {
+        "id": 4,
+        "name": "Gabriel",
+        "element_type": 2,
+        "team": 1,
+        "price_bought": 8.0
+      },
+      {
+        "id": 13,
+        "name": "Rice",
+        "element_type": 3,
+        "team": 1,
+        "price_bought": 7.5
+      },
+      {
+        "id": 106,
+        "name": "Thiago",
+        "element_type": 4,
+        "team": 4,
+        "price_bought": 8.0
+      },
+      {
+        "id": 109,
+        "name": "Verbruggen",
+        "element_type": 1,
+        "team": 5,
+        "price_bought": 4.5
+      },
+      {
+        "id": 265,
+        "name": "Berge",
+        "element_type": 3,
+        "team": 10,
+        "price_bought": 5.0
+      },
+      {
+        "id": 272,
+        "name": "Kusi-Asare",
+        "element_type": 4,
+        "team": 10,
+        "price_bought": 4.5
+      },
+      {
+        "id": 356,
+        "name": "Virgil",
+        "element_type": 2,
+        "team": 14,
+        "price_bought": 6.5
+      },
+      {
+        "id": 368,
+        "name": "Szoboszlai",
+        "element_type": 3,
+        "team": 14,
+        "price_bought": 7.0
+      },
+      {
+        "id": 387,
+        "name": "O'Reilly",
+        "element_type": 2,
+        "team": 15,
+        "price_bought": 6.5
+      },
+      {
+        "id": 388,
+        "name": "Gu\u00e9hi",
+        "element_type": 2,
+        "team": 15,
+        "price_bought": 6.0
+      },
+      {
+        "id": 389,
+        "name": "Matheus N.",
+        "element_type": 2,
+        "team": 15,
+        "price_bought": 6.0
+      },
+      {
+        "id": 426,
+        "name": "B.Fernandes",
+        "element_type": 3,
+        "team": 16,
+        "price_bought": 12.0
+      },
+      {
+        "id": 480,
+        "name": "Gibbs-White",
+        "element_type": 3,
+        "team": 18,
+        "price_bought": 8.0
+      },
+      {
+        "id": 528,
+        "name": "Scarlett",
+        "element_type": 4,
+        "team": 19,
+        "price_bought": 4.5
+      }
+    ],
+    "bank": 0.0,
+    "formation": "5-4-1",
+    "starting_xi_ids": [
+      1,
+      4,
+      356,
+      387,
+      388,
+      389,
+      426,
+      480,
+      13,
+      368,
+      106
+    ],
+    "bench_ids": [
+      109,
+      265,
+      272,
+      528
+    ],
+    "captain_id": 1,
+    "vice_captain_id": 4
+  },
+  "chips": {
+    "wildcard_1": {
+      "used": false,
+      "gameweek": null
+    },
+    "wildcard_2": {
+      "used": false,
+      "gameweek": null
+    },
+    "free_hit": {
+      "used": false,
+      "gameweek": null
+    },
+    "bench_boost": {
+      "used": false,
+      "gameweek": null
+    },
+    "triple_captain": {
+      "used": false,
+      "gameweek": null
+    }
+  },
+  "free_transfers": 1,
+  "transfer_history": [],
+  "last_lineup_sent": {
+    "gameweek": null,
+    "stage": null,
+    "xi_ids": []
+  },
+  "gameweek_history": [],
+  "last_updated": "2026-08-16T10:14:15.478259+00:00"
+}
