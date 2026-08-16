@@ -27,12 +27,13 @@ def run_build_squad(budget: float):
         )
 
     scores = scoring.score_players(elements, fixture_favorability)
+    ep_scores = scoring.raw_expected_points(elements)
     squad_ids = squad_builder.build_optimal_squad(elements, scores, budget=budget)
 
     by_id = {p["id"]: p for p in bootstrap["elements"]}
     squad_players = [by_id[pid] for pid in squad_ids]
     formation, starters = lineup.best_formation_and_xi(squad_players, scores)
-    captain_id, vice_id = lineup.pick_captain_vice(starters, scores)
+    captain_id, vice_id = lineup.pick_captain_vice(starters, ep_scores)
 
     state = state_mod.load_state()
     state["squad"]["players"] = [
@@ -95,6 +96,7 @@ def run_daily():
         for p in elements
     }
     scores = scoring.score_players(elements, fixture_favorability)
+    ep_scores = scoring.raw_expected_points(elements)
 
     by_id = {p["id"]: p for p in bootstrap["elements"]}
     squad_ids = [pl["id"] for pl in state["squad"]["players"]]
@@ -110,7 +112,7 @@ def run_daily():
     final_starters = starters if should_change else [by_id[pid] for pid in previous_xi_ids if pid in by_id]
     final_formation = formation if should_change else _formation_from_ids(previous_xi_ids, by_id)
 
-    captain_id, vice_id = lineup.pick_captain_vice(final_starters, scores)
+    captain_id, vice_id = lineup.pick_captain_vice(final_starters, ep_scores)
     labeled = lineup.label_positions(final_starters, final_formation)
     for p in labeled:
         p["_group"] = {1: "GK", 2: "DEF", 3: "MID", 4: "FWD"}[p["element_type"]]
