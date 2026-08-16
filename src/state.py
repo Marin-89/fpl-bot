@@ -23,22 +23,30 @@ DEFAULT_STATE = {
     "chips": {
         "wildcard_1": {"used": False, "gameweek": None},
         "wildcard_2": {"used": False, "gameweek": None},
-        "free_hit": {"used": False, "gameweek": None},
-        "bench_boost": {"used": False, "gameweek": None},
-        "triple_captain": {"used": False, "gameweek": None},
+        "free_hit_1": {"used": False, "gameweek": None},
+        "free_hit_2": {"used": False, "gameweek": None},
+        "bench_boost_1": {"used": False, "gameweek": None},
+        "bench_boost_2": {"used": False, "gameweek": None},
+        "triple_captain_1": {"used": False, "gameweek": None},
+        "triple_captain_2": {"used": False, "gameweek": None},
     },
     "free_transfers": 1,
+    "last_processed_gameweek": None,
     "transfer_history": [],
-    "live_message": {          # the single "always up to date" message per gameweek
+    "live_message": {
         "gameweek": None,
         "message_id": None,
-        "text": None,          # last text sent/edited, so we can skip no-op edits
+        "text": None,
     },
-    "last_known_deadline": {   # used to detect FPL reschedules and alert on them
+    "last_known_deadline": {
         "gameweek": None,
         "deadline_time": None,
         "first_kickoff": None,
     },
+    "chip_expiry_warned": [],
+    "chip_check_last_date": None,
+    "captain_ep_history": [],
+    "pending_command": None,
     "gameweek_history": [],
     "processing": False,
     "telegram_offset": None,
@@ -48,14 +56,16 @@ DEFAULT_STATE = {
 
 def load_state() -> dict:
     if not os.path.exists(STATE_PATH):
-        return json.loads(json.dumps(DEFAULT_STATE))  # deep copy
+        return json.loads(json.dumps(DEFAULT_STATE))
     with open(STATE_PATH, "r") as f:
         loaded = json.load(f)
-    # Merge in any new default keys an older state.json might be missing,
-    # so upgrading the code doesn't require manually touching the file.
     merged = json.loads(json.dumps(DEFAULT_STATE))
     merged.update(loaded)
-    for key in ("live_message", "last_known_deadline"):
+    for key in (
+        "live_message", "last_known_deadline", "chips", "chip_expiry_warned",
+        "last_processed_gameweek", "chip_check_last_date", "captain_ep_history",
+        "pending_command",
+    ):
         if key not in loaded:
             merged[key] = DEFAULT_STATE[key]
     return merged
