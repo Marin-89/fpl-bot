@@ -8,6 +8,15 @@ https://fantasy.premierleague.com/en/help/rules):
   - 15 players total: 2 GK, 5 DEF, 5 MID, 3 FWD
   - Max 3 players from any one Premier League club
   - Total spend <= budget (default £100.0m)
+
+Additional soft guardrails (not FPL rules, our own design choice — see spec
+discussion on formation strategy): DEFCON has made strong defenders
+genuinely valuable, but an optimizer maximizing raw score can over-invest in
+defenders and leave forwards under-funded, producing lopsided squads (e.g.
+5 strong defenders + 3 budget-tier forwards) that force weak formations like
+5-4-1. Two guardrails prevent that:
+  - max_def_budget_fraction: caps total spend on defenders as a share of budget
+  - min_avg_fwd_price: ensures forwards aren't all bottom-tier budget picks
 """
 import pulp
 
@@ -20,6 +29,8 @@ def build_optimal_squad(
     scores: dict,
     budget: float = 100.0,
     bench_weight: float = 0.15,
+    max_def_budget_fraction: float = 0.30,
+    min_avg_fwd_price: float = 5.5,
 ) -> list[int]:
     """
     Returns a list of 15 player IDs forming the optimal squad under budget
@@ -29,6 +40,15 @@ def build_optimal_squad(
     (low but nonzero — we still want a competent bench, not just 11 good
     players and 4 throwaways, since bench strength was an explicit
     requirement).
+
+    max_def_budget_fraction: defenders' total price cannot exceed this share
+    of the budget (default 30%, above the ~25-26% top-50-manager average
+    from FPL Review's Top 50 Strategy data, to leave headroom without
+    forcing it — this discourages but doesn't ban a defender-heavy build).
+
+    min_avg_fwd_price: average price of the 3 forwards must be at least this
+    (default £5.5m) — stops the optimizer funding a defender-heavy squad by
+    dumping all 3 forward slots into rock-bottom £4.5m picks.
 
     NOTE: this picks the 15-man SQUAD. Picking which 11 of those 15 start,
     with tactical position labels, is lineup.py's job (it runs against a
@@ -70,9 +90,26 @@ def build_optimal_squad(
         picked[pid] * (by_id[pid]["now_cost"] / 10.0) for pid in picked
     ) <= budget
 
+    # Guardrail: cap defender spend as a share of total budget.
+    def_spend = pulp.lpSum(
+        picked[pid] * (by_id[pid]["now_cost"] / 10.0)
+        for pid in picked if by_id[pid]["element_type"] == 2
+    )
+    prob += def_spend <= max_def_budget_fraction * budget
+
+    # Guardrail: forwards' average price must clear a quality floor.
+    fwd_spend = pulp.lpSum(
+        picked[pid] * (by_id[pid]["now_cost"] / 10.0)
+        for pid in picked if by_id[pid]["element_type"] == 4
+    )
+    prob += fwd_spend >= min_avg_fwd_price * SQUAD_REQUIREMENTS[4]
+
     prob.solve(pulp.PULP_CBC_CMD(msg=False))
 
     if pulp.LpStatus[prob.status] != "Optimal":
-        raise RuntimeError(f"Squad optimizer did not find an optimal solution: {pulp.LpStatus[prob.status]}")
+        raise RuntimeError(
+            f"Squad optimizer did not find an optimal solution: {pulp.LpStatus[prob.status]}. "
+            f"Try relaxing max_def_budget_fraction or min_avg_fwd_price."
+        )
 
     return [pid for pid, var in picked.items() if var.value() == 1]
