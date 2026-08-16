@@ -12,6 +12,24 @@ LEGAL_FORMATIONS = [
     (4, 5, 1), (5, 4, 1), (5, 3, 2), (5, 2, 3),
 ]
 
+# Soft nudge toward historically stronger FPL formations, based on 2025/26
+# Top 50 manager usage data (3-4-3/3-5-2 remain elite; DEFCON made 4-4-2/
+# 4-3-3 legitimate; 5-defender shapes remain generally weak since a 5th
+# defender's return rarely beats what a midfielder slot would produce over
+# a season). This is a preference, not a rule — a genuinely large expected-
+# points gap in the raw scores can still override it, since a bad squad
+# shouldn't be forced into a "good" formation it doesn't have the players for.
+FORMATION_PREFERENCE = {
+    (3, 5, 2): 1.05,
+    (3, 4, 3): 1.05,
+    (4, 4, 2): 1.02,
+    (4, 3, 3): 1.02,
+    (4, 5, 1): 1.00,
+    (5, 2, 3): 0.98,
+    (5, 3, 2): 0.95,
+    (5, 4, 1): 0.94,
+}
+
 POSITION_LABELS = {
     "DEF": {
         3: ["LCB", "CB", "RCB"],
@@ -68,16 +86,17 @@ def label_positions(starters: list[dict], formation: tuple[int, int, int]) -> li
 def best_formation_and_xi(squad: list[dict], scores: dict) -> tuple[tuple[int, int, int], list[dict]]:
     """
     Tries every legal formation against the fixed squad, returns the
-    (formation, starting_xi) combination with the highest total score.
-    Uses the position-normalized 'scores' — correct here, since we're
-    comparing e.g. defender vs defender for a starting slot, not captaincy.
+    (formation, starting_xi) combination with the highest PREFERENCE-ADJUSTED
+    score — see FORMATION_PREFERENCE above. Uses the position-normalized
+    'scores' for the underlying comparison, since we're comparing e.g.
+    defender vs defender for a starting slot, not captaincy.
     """
     gk = sorted([p for p in squad if p["element_type"] == 1], key=lambda p: -scores.get(p["id"], 0))
     defs = sorted([p for p in squad if p["element_type"] == 2], key=lambda p: -scores.get(p["id"], 0))
     mids = sorted([p for p in squad if p["element_type"] == 3], key=lambda p: -scores.get(p["id"], 0))
     fwds = sorted([p for p in squad if p["element_type"] == 4], key=lambda p: -scores.get(p["id"], 0))
 
-    best_total = -1.0
+    best_adjusted_total = -1.0
     best_formation = None
     best_xi = None
 
@@ -85,9 +104,10 @@ def best_formation_and_xi(squad: list[dict], scores: dict) -> tuple[tuple[int, i
         if len(defs) < d or len(mids) < m or len(fwds) < f:
             continue
         xi = gk[:1] + defs[:d] + mids[:m] + fwds[:f]
-        total = sum(scores.get(p["id"], 0) for p in xi)
-        if total > best_total:
-            best_total = total
+        raw_total = sum(scores.get(p["id"], 0) for p in xi)
+        adjusted_total = raw_total * FORMATION_PREFERENCE.get((d, m, f), 1.0)
+        if adjusted_total > best_adjusted_total:
+            best_adjusted_total = adjusted_total
             best_formation = (d, m, f)
             best_xi = xi
 
@@ -109,9 +129,7 @@ def pick_captain_vice(starters: list[dict], ep_scores: dict) -> tuple[int, int]:
     expected points — it's about upside. A defender and a forward can have
     similar average output, but the forward's spike potential (brace +
     assist + bonus) is much higher, which matters specifically because the
-    armband doubles whatever happens. The multiplier nudges the choice
-    toward that reality without rigidly overriding a genuinely large
-    expected-points gap in a defender's favor.
+    armband doubles whatever happens.
     """
     outfield = [p for p in starters if p["element_type"] != 1]
     ranked = sorted(
