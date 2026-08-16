@@ -46,7 +46,6 @@ DEFAULT_STATE = {
     "chip_expiry_warned": [],
     "chip_check_last_date": None,
     "captain_ep_history": [],
-    "pending_command": None,
     "gameweek_history": [],
     "processing": False,
     "telegram_offset": None,
@@ -64,7 +63,6 @@ def load_state() -> dict:
     for key in (
         "live_message", "last_known_deadline", "chips", "chip_expiry_warned",
         "last_processed_gameweek", "chip_check_last_date", "captain_ep_history",
-        "pending_command",
     ):
         if key not in loaded:
             merged[key] = DEFAULT_STATE[key]
