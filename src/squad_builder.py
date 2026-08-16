@@ -30,7 +30,7 @@ def build_optimal_squad(
     budget: float = 100.0,
     bench_weight: float = 0.15,
     max_def_budget_fraction: float = 0.30,
-    min_avg_fwd_price: float = 5.5,
+    min_avg_fwd_price: float = 6.5,
 ) -> list[int]:
     """
     Returns a list of 15 player IDs forming the optimal squad under budget
