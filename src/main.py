@@ -1,7 +1,17 @@
 """
 Orchestrator. Invoked by GitHub Actions on a schedule (see
-.github/workflows/scheduler.yml and .github/workflows/listener.yml). Figures
-out what stage of the deadline cycle we're in and does the appropriate thing.
+.github/workflows/scheduler.yml and .github/workflows/listener.yml).
+
+Design: rather than sending a fresh Telegram message every time it runs,
+the bot maintains ONE "live" message per gameweek that it silently edits
+in place as the lineup gets recomputed. A NEW message (an alert) is only
+sent when something actually worth your attention happens:
+  - the lineup materially changed (cleared the stability threshold)
+  - the stage moved into the "Final Confirmed" window
+  - FPL changed a deadline or kickoff time since we last checked
+Everything else is a silent edit — you can always see the current state by
+scrolling to the one live message, without your chat filling up with
+near-duplicate updates.
 """
 import argparse
 from datetime import datetime, timezone
@@ -46,6 +56,8 @@ def run_build_squad(budget: float):
     state["squad"]["bench_ids"] = [p["id"] for p in bench]
     state["squad"]["captain_id"] = captain_id
     state["squad"]["vice_captain_id"] = vice_id
+    # New squad build starts a fresh live message for whatever the next gameweek is.
+    state["live_message"] = {"gameweek": None, "message_id": None, "text": None}
     state_mod.save_state(state)
 
     print(f"Squad built. Formation {state['squad']['formation']}, bank £{state['squad']['bank']}m")
@@ -87,10 +99,27 @@ def _run_daily_inner(state: dict):
     if not check["consistent"]:
         print(f"WARNING: deadline/kickoff mismatch of {check['diff_minutes']:.0f} min — verify manually.")
 
+    # --- Deadline/kickoff change detection: alert immediately if FPL moved something ---
+    last_known = state.get("last_known_deadline", {})
+    if (
+        last_known.get("gameweek") == target_event["id"]
+        and last_known.get("deadline_time") is not None
+        and (last_known.get("deadline_time") != deadline_time or last_known.get("first_kickoff") != first_kickoff)
+    ):
+        telegram_bot.send_message(
+            f"⚠️ *Gameweek {target_event['id']} schedule changed*\n\n"
+            f"Deadline: {last_known.get('deadline_time')} → {deadline_time}\n"
+            f"First kickoff: {last_known.get('first_kickoff')} → {first_kickoff}"
+        )
+    state["last_known_deadline"] = {
+        "gameweek": target_event["id"], "deadline_time": deadline_time, "first_kickoff": first_kickoff,
+    }
+
     now = datetime.now(timezone.utc)
     stage = deadlines.current_stage(now, deadline_time, first_kickoff)
     if stage == "locked":
         print("Deadline has passed for this gameweek. Nothing to do.")
+        state_mod.save_state(state)
         return
 
     elements = filters.filter_available_players(bootstrap["elements"])
@@ -132,62 +161,76 @@ def _run_daily_inner(state: dict):
     ]
 
     changes = []
-    if should_change and previous_xi_ids and new_xi_ids != previous_xi_ids:
+    material_change = should_change and previous_xi_ids and new_xi_ids != previous_xi_ids
+    if material_change:
         added = new_xi_ids - previous_xi_ids
         removed = previous_xi_ids - new_xi_ids
         for pid in removed:
             in_name = by_id.get(list(added)[0], {}).get("web_name", "?") if added else "?"
             changes.append(f"{by_id[pid]['web_name']} → {in_name}: score improved beyond stability threshold")
 
-    already_sent = (
-        state["last_lineup_sent"]["gameweek"] == target_event["id"]
-        and state["last_lineup_sent"]["stage"] == stage
-        and set(state["last_lineup_sent"]["xi_ids"]) == new_xi_ids
-    )
-
-    if stage == "late_check_window":
-        if not changes:
-            print("Late check: no material change since Final message. Staying silent.")
-            return
-        stage_label = "Late Update"
-    elif stage == "final_window":
-        if already_sent:
-            print("Final message already sent for this gameweek. Skipping duplicate.")
-            return
-        stage_label = "Final Confirmed Lineup"
-    else:
-        if already_sent:
-            print("Predicted lineup already sent and unchanged today. Skipping duplicate.")
-            return
-        stage_label = "Predicted Lineup"
+    stage_display = {
+        "predicted": "Predicted Lineup",
+        "final_window": "Final Confirmed Lineup",
+        "late_check_window": "Late Update",
+    }[stage]
 
     captain_name = by_id[captain_id]["web_name"]
     vice_name = by_id[vice_id]["web_name"]
-    message = telegram_bot.format_lineup_message(
-        stage_label, target_event["id"], labeled, bench_players, captain_name, vice_name, changes
+    message_text = telegram_bot.format_lineup_message(
+        stage_display, target_event["id"], labeled, bench_players, captain_name, vice_name, changes
     )
-    telegram_bot.send_message(message)
-    print(f"Sent: {stage_label} – Week {target_event['id']}")
+
+    live = state.get("live_message", {})
+    is_new_gameweek = live.get("gameweek") != target_event["id"]
+    text_unchanged = (not is_new_gameweek) and live.get("text") == message_text
+
+    entering_final_window_now = stage == "final_window" and live.get("_last_stage") != "final_window"
+    should_alert = material_change or entering_final_window_now or (stage == "late_check_window" and changes)
+
+    if is_new_gameweek or not live.get("message_id"):
+        # No live message exists yet for this gameweek — send a fresh one and start tracking it.
+        message_id = telegram_bot.send_message(message_text)
+        state["live_message"] = {"gameweek": target_event["id"], "message_id": message_id, "text": message_text}
+        print(f"Sent new live message for GW{target_event['id']} (stage: {stage_display})")
+    elif not text_unchanged:
+        # Live message exists — edit it in place rather than sending a new one.
+        edited = telegram_bot.edit_message(live["message_id"], message_text)
+        state["live_message"]["text"] = message_text
+        if edited:
+            print(f"Edited live message for GW{target_event['id']} (stage: {stage_display})")
+        else:
+            print("Edit failed (likely stale message_id) — sending a fresh message instead.")
+            message_id = telegram_bot.send_message(message_text)
+            state["live_message"] = {"gameweek": target_event["id"], "message_id": message_id, "text": message_text}
+    else:
+        print("No change since last check — live message left as-is.")
+
+    state["live_message"]["_last_stage"] = stage  # tracked separately from the visible text
+
+    if should_alert:
+        alert_reason = (
+            "Lineup changed" if material_change
+            else "Final Confirmed Lineup is now locked in" if entering_final_window_now
+            else "Late change detected before deadline"
+        )
+        telegram_bot.send_message(f"🔔 *{alert_reason}* — see the updated lineup above.")
+        print(f"Sent alert: {alert_reason}")
 
     state["squad"]["starting_xi_ids"] = list(new_xi_ids) if should_change else list(previous_xi_ids)
     state["squad"]["bench_ids"] = bench_ids
     state["squad"]["captain_id"] = captain_id
     state["squad"]["vice_captain_id"] = vice_id
     state["squad"]["formation"] = "-".join(str(x) for x in final_formation)
-    state["last_lineup_sent"] = {
-        "gameweek": target_event["id"], "stage": stage, "xi_ids": list(new_xi_ids),
-    }
     state_mod.save_state(state)
 
 
 def run_manual_lineup():
     """
-    On-demand lineup, triggered by typing 'lineup' in Telegram (see
-    telegram_listener.py) or by running this mode directly. Unlike
-    run_daily, this always computes and sends the current lineup regardless
-    of deadline stage or whether an identical message was already sent —
-    it's an explicit request, so the usual silence-on-no-change rule
-    doesn't apply here.
+    On-demand lineup, triggered by typing 'lineup' in Telegram. This always
+    sends a fresh message (an explicit request deserves an explicit reply)
+    rather than touching the live tracked message, so it doesn't interfere
+    with the edit-in-place flow above.
     """
     state = state_mod.load_state()
     if not state["squad"]["players"]:
