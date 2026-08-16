@@ -4,20 +4,15 @@ Orchestrator. Invoked by GitHub Actions on a schedule (see
 
 Design: rather than sending a fresh Telegram message every time it runs,
 the bot maintains ONE "live" message per gameweek that it silently edits
-in place as the lineup gets recomputed. A NEW message (an alert) is only
-sent when something actually worth your attention happens:
-  - the lineup materially changed (cleared the stability threshold)
-  - the stage moved into the "Final Confirmed" window
-  - FPL changed a deadline or kickoff time since we last checked
-Everything else is a silent edit — you can always see the current state by
-scrolling to the one live message, without your chat filling up with
-near-duplicate updates.
+in place. A NEW message (an alert) is only sent when something actually
+worth your attention happens: a material lineup change, entering the Final
+Confirmed window, or a detected FPL deadline/fixture reschedule.
 """
 import argparse
 from datetime import datetime, timezone
 
 from . import fpl_api, filters, fixture_diff, scoring, squad_builder, lineup, state as state_mod
-from . import news, telegram_bot, deadlines, review, telegram_listener
+from . import news, telegram_bot, deadlines, review, telegram_listener, chips as chips_mod, transfers
 
 
 def run_build_squad(budget: float):
@@ -45,7 +40,7 @@ def run_build_squad(budget: float):
     state = state_mod.load_state()
     state["squad"]["players"] = [
         {"id": p["id"], "name": p["web_name"], "element_type": p["element_type"], "team": p["team"],
-         "price_bought": p["now_cost"] / 10.0}
+         "price_bought": p["now_cost"] / 10.0, "sell_price": p["now_cost"] / 10.0}
         for p in squad_players
     ]
     spend = sum(p["now_cost"] / 10.0 for p in squad_players)
@@ -56,7 +51,6 @@ def run_build_squad(budget: float):
     state["squad"]["bench_ids"] = [p["id"] for p in bench]
     state["squad"]["captain_id"] = captain_id
     state["squad"]["vice_captain_id"] = vice_id
-    # New squad build starts a fresh live message for whatever the next gameweek is.
     state["live_message"] = {"gameweek": None, "message_id": None, "text": None}
     state_mod.save_state(state)
 
@@ -115,6 +109,20 @@ def _run_daily_inner(state: dict):
         "gameweek": target_event["id"], "deadline_time": deadline_time, "first_kickoff": first_kickoff,
     }
 
+    # --- Free transfer accumulation for this gameweek ---
+    transfers.advance_gameweek_free_transfers(state, target_event["id"])
+
+    # --- Chip expiry warning (first-half chips expire at GW19, don't carry over) ---
+    expiring = chips_mod.expiring_soon(state["chips"], target_event["id"])
+    if expiring and target_event["id"] not in state.get("chip_expiry_warned", []):
+        chip_names = ", ".join(k.replace("_1", "").replace("_", " ").title() for k in expiring)
+        telegram_bot.send_message(
+            f"⏳ *Chip expiry warning*\n\n"
+            f"Unused first-half chip(s) — {chip_names} — expire at the GW{chips_mod.FIRST_HALF_DEADLINE_EVENT} "
+            f"deadline and will NOT carry over. Consider using them before then."
+        )
+        state.setdefault("chip_expiry_warned", []).append(target_event["id"])
+
     now = datetime.now(timezone.utc)
     stage = deadlines.current_stage(now, deadline_time, first_kickoff)
     if stage == "locked":
@@ -135,6 +143,13 @@ def _run_daily_inner(state: dict):
     ep_scores = scoring.raw_expected_points(elements)
 
     by_id = {p["id"]: p for p in bootstrap["elements"]}
+
+    # --- Sell price update for every squad player, using current market price ---
+    for p in state["squad"]["players"]:
+        live = by_id.get(p["id"])
+        if live:
+            p["sell_price"] = transfers.calculate_sell_price(p["price_bought"], live["now_cost"] / 10.0)
+
     squad_ids = [pl["id"] for pl in state["squad"]["players"]]
     squad_players = [by_id[pid] for pid in squad_ids if pid in by_id]
 
@@ -181,21 +196,19 @@ def _run_daily_inner(state: dict):
         stage_display, target_event["id"], labeled, bench_players, captain_name, vice_name, changes
     )
 
-    live = state.get("live_message", {})
-    is_new_gameweek = live.get("gameweek") != target_event["id"]
-    text_unchanged = (not is_new_gameweek) and live.get("text") == message_text
+    live_msg = state.get("live_message", {})
+    is_new_gameweek = live_msg.get("gameweek") != target_event["id"]
+    text_unchanged = (not is_new_gameweek) and live_msg.get("text") == message_text
 
-    entering_final_window_now = stage == "final_window" and live.get("_last_stage") != "final_window"
+    entering_final_window_now = stage == "final_window" and live_msg.get("_last_stage") != "final_window"
     should_alert = material_change or entering_final_window_now or (stage == "late_check_window" and changes)
 
-    if is_new_gameweek or not live.get("message_id"):
-        # No live message exists yet for this gameweek — send a fresh one and start tracking it.
+    if is_new_gameweek or not live_msg.get("message_id"):
         message_id = telegram_bot.send_message(message_text)
         state["live_message"] = {"gameweek": target_event["id"], "message_id": message_id, "text": message_text}
         print(f"Sent new live message for GW{target_event['id']} (stage: {stage_display})")
     elif not text_unchanged:
-        # Live message exists — edit it in place rather than sending a new one.
-        edited = telegram_bot.edit_message(live["message_id"], message_text)
+        edited = telegram_bot.edit_message(live_msg["message_id"], message_text)
         state["live_message"]["text"] = message_text
         if edited:
             print(f"Edited live message for GW{target_event['id']} (stage: {stage_display})")
@@ -206,7 +219,7 @@ def _run_daily_inner(state: dict):
     else:
         print("No change since last check — live message left as-is.")
 
-    state["live_message"]["_last_stage"] = stage  # tracked separately from the visible text
+    state["live_message"]["_last_stage"] = stage
 
     if should_alert:
         alert_reason = (
@@ -226,12 +239,6 @@ def _run_daily_inner(state: dict):
 
 
 def run_manual_lineup():
-    """
-    On-demand lineup, triggered by typing 'lineup' in Telegram. This always
-    sends a fresh message (an explicit request deserves an explicit reply)
-    rather than touching the live tracked message, so it doesn't interfere
-    with the edit-in-place flow above.
-    """
     state = state_mod.load_state()
     if not state["squad"]["players"]:
         telegram_bot.send_message("No squad found yet — run Build Initial Squad first.")
@@ -308,7 +315,14 @@ def _formation_from_ids(xi_ids, by_id):
 
 def run_review(gameweek: int):
     state = state_mod.load_state()
-    bootstrap = fpl_api.get_bootstrap_static()
+    fixtures_for_event = fpl_api.get_fixtures(event=gameweek)
+
+    locked, message = review.gameweek_points_locked(fixtures_for_event)
+    if not locked:
+        telegram_bot.send_message(f"Gameweek {gameweek} review isn't ready yet: {message}")
+        print(f"Review skipped: {message}")
+        return
+
     live = fpl_api.get_live_gameweek(gameweek)
     live_by_id = {e["id"]: e["stats"]["total_points"] for e in live["elements"]}
 
