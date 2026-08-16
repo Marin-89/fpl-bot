@@ -173,6 +173,7 @@
     ]
   },
   "gameweek_history": [],
-  "last_updated": "2026-08-16T11:44:06.108955+00:00",
-  "processing": false
+  "last_updated": "2026-08-16T11:44:46.445216+00:00",
+  "processing": false,
+  "telegram_offset": 310227979
 }
