@@ -1,7 +1,7 @@
 """
-Sends messages via the Telegram Bot API, and polls for incoming messages.
-Token and chat ID come from environment variables (GitHub Secrets in
-production) — never hardcoded.
+Sends and edits messages via the Telegram Bot API, and polls for incoming
+messages. Token and chat ID come from environment variables (GitHub Secrets
+in production) — never hardcoded.
 """
 import os
 import requests
@@ -9,7 +9,8 @@ import requests
 API_BASE = "https://api.telegram.org"
 
 
-def send_message(text: str) -> bool:
+def send_message(text: str) -> int | None:
+    """Sends a new message. Returns the new message_id on success, or None on failure."""
     token = os.environ.get("TELEGRAM_BOT_TOKEN")
     chat_id = os.environ.get("TELEGRAM_CHAT_ID")
     if not token or not chat_id:
@@ -23,6 +24,34 @@ def send_message(text: str) -> bool:
         timeout=15,
     )
     resp.raise_for_status()
+    data = resp.json()
+    if not data.get("ok"):
+        return None
+    return data["result"]["message_id"]
+
+
+def edit_message(message_id: int, text: str) -> bool:
+    """
+    Edits an existing message in place. Returns True on success. Returns
+    False (rather than raising) if the edit fails — most commonly because
+    the message content is unchanged (Telegram rejects no-op edits) or the
+    message is too old to edit. Callers should fall back to send_message
+    on failure if a fresh message is actually needed.
+    """
+    token = os.environ.get("TELEGRAM_BOT_TOKEN")
+    chat_id = os.environ.get("TELEGRAM_CHAT_ID")
+    if not token or not chat_id:
+        raise RuntimeError(
+            "TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID must be set as environment variables."
+        )
+
+    resp = requests.post(
+        f"{API_BASE}/bot{token}/editMessageText",
+        json={"chat_id": chat_id, "message_id": message_id, "text": text, "parse_mode": "Markdown"},
+        timeout=15,
+    )
+    if resp.status_code != 200:
+        return False
     return resp.json().get("ok", False)
 
 
