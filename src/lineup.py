@@ -87,7 +87,15 @@ def best_formation_and_xi(squad: list[dict], scores: dict) -> tuple[tuple[int, i
 
 
 def pick_captain_vice(starters: list[dict], scores: dict) -> tuple[int, int]:
-    ranked = sorted(starters, key=lambda p: -scores.get(p["id"], 0))
+    """
+    Captain and vice-captain are chosen from outfield players only (DEF/MID/FWD).
+    Goalkeepers are excluded even if they score highest in the model — a keeper's
+    points ceiling is far lower than an attacker's on a good day, so captaining
+    one is essentially always the wrong real-world call regardless of what a
+    single-gameweek score comparison suggests.
+    """
+    outfield = [p for p in starters if p["element_type"] != 1]
+    ranked = sorted(outfield, key=lambda p: -scores.get(p["id"], 0))
     return ranked[0]["id"], ranked[1]["id"]
 
 
