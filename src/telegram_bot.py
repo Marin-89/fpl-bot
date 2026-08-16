@@ -1,6 +1,7 @@
 """
-Sends messages via the Telegram Bot API. Token and chat ID come from
-environment variables (GitHub Secrets in production) — never hardcoded.
+Sends and receives messages via the Telegram Bot API. Token and chat ID
+come from environment variables (GitHub Secrets in production) — never
+hardcoded.
 """
 import os
 import requests
@@ -23,6 +24,27 @@ def send_message(text: str) -> bool:
     )
     resp.raise_for_status()
     return resp.json().get("ok", False)
+
+
+def get_updates(offset: int = 0) -> list[dict]:
+    """
+    Fetches new incoming messages since the given update offset (an
+    incrementing ID Telegram assigns to every update — passing offset =
+    last_seen_id + 1 tells Telegram "only give me updates after this one",
+    so we don't reprocess the same message twice across runs).
+    """
+    token = os.environ.get("TELEGRAM_BOT_TOKEN")
+    if not token:
+        raise RuntimeError("TELEGRAM_BOT_TOKEN must be set as an environment variable.")
+
+    resp = requests.get(
+        f"{API_BASE}/bot{token}/getUpdates",
+        params={"offset": offset, "timeout": 0},
+        timeout=15,
+    )
+    resp.raise_for_status()
+    data = resp.json()
+    return data.get("result", [])
 
 
 def format_lineup_message(
