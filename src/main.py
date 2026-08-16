@@ -8,10 +8,6 @@ in place. A NEW message (an alert) is only sent when something actually
 worth your attention happens: a material lineup change, entering the Final
 Confirmed window, a detected FPL deadline/fixture reschedule, or a flagged
 chip opportunity (checked once per day, not every scheduler tick).
-
-Manual commands (typed in Telegram, e.g. "lineup") are handled by
-telegram_listener.py via the registry in commands.py, using a two-phase
-acknowledge-then-process flow across two poll cycles.
 """
 import argparse
 from datetime import datetime, timezone
@@ -259,13 +255,14 @@ def _run_daily_inner(state: dict):
     state_mod.save_state(state)
 
 
-def run_manual_lineup(send_acknowledgment: bool = True):
+def run_manual_lineup():
     """
-    On-demand lineup. Normally triggered indirectly by typing 'lineup' in
-    Telegram — see telegram_listener.py / commands.py, which sends the
-    acknowledgment itself on one poll cycle and calls this with
-    send_acknowledgment=False on the next cycle, so the two messages land
-    a real poll-interval apart rather than on the same timestamp.
+    On-demand lineup, triggered by typing 'lineup' in Telegram (see
+    telegram_listener.py) or by running this mode directly. Unlike
+    run_daily, this always computes and sends the current lineup regardless
+    of deadline stage or whether an identical message was already sent —
+    it's an explicit request, so the usual silence-on-no-change rule
+    doesn't apply here.
     """
     state = state_mod.load_state()
     if not state["squad"]["players"]:
@@ -274,8 +271,7 @@ def run_manual_lineup(send_acknowledgment: bool = True):
 
     state["processing"] = True
     state_mod.save_state(state)
-    if send_acknowledgment:
-        telegram_bot.send_message("Working on your lineup...")
+    telegram_bot.send_message("Working on it...")
 
     try:
         bootstrap = fpl_api.get_bootstrap_static()
