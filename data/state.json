@@ -187,11 +187,11 @@
   "captain_ep_history": [
     4.0
   ],
-  "pending_command": null,
   "gameweek_history": [],
   "processing": false,
-  "telegram_offset": 310227980,
-  "last_updated": "2026-08-16T13:36:09.396725+00:00",
+  "telegram_offset": 310227981,
+  "last_updated": "2026-08-16T13:48:12.114244+00:00",
+  "pending_command": null,
   "last_lineup_sent": {
     "gameweek": 1,
     "stage": "predicted",
