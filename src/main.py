@@ -119,6 +119,12 @@ def run_daily():
 
     bench_ids = [pid for pid in squad_ids if pid not in {p["id"] for p in final_starters}]
     bench_players = [by_id[pid] for pid in bench_ids if pid in by_id]
+    # NEW: label bench players by position group too (GK/DEF/MID/FWD),
+    # so the Telegram message shows e.g. "1. DEF — Guéhi" instead of just a name.
+    bench_players = [
+        {**p, "_group": {1: "GK", 2: "DEF", 3: "MID", 4: "FWD"}[p["element_type"]]}
+        for p in bench_players
+    ]
 
     changes = []
     if should_change and previous_xi_ids and new_xi_ids != previous_xi_ids:
