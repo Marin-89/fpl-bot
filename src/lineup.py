@@ -34,6 +34,12 @@ POSITION_LABELS = {
 STABILITY_THRESHOLD = 0.08
 TRANSFER_CONVICTION_THRESHOLD = 0.15
 
+CAPTAINCY_CEILING_MULTIPLIER = {
+    4: 1.15,  # FWD — highest upside/ceiling, favored most for captaincy
+    3: 1.08,  # MID
+    2: 1.00,  # DEF — solid average, but lower ceiling than attackers
+}
+
 
 def label_positions(starters: list[dict], formation: tuple[int, int, int]) -> list[dict]:
     """
@@ -93,15 +99,25 @@ def pick_captain_vice(starters: list[dict], ep_scores: dict) -> tuple[int, int]:
     Captain and vice-captain are chosen by raw expected points (ep_scores —
     see scoring.raw_expected_points), which is comparable across ALL
     positions, not the position-normalized 'scores' used elsewhere in this
-    file. Goalkeepers are still excluded: even on a genuinely comparable
-    expected-points scale, a keeper's realistic ceiling in a single game is
-    far below an attacker's, so they're never the right captain pick in
-    practice — but among the outfield players, this now correctly compares
-    "who has the highest expected points overall", not "who stands out most
-    within their own position group".
+    file. Goalkeepers are excluded entirely: even on a fair expected-points
+    scale, a keeper's realistic ceiling in a single game is far below an
+    attacker's, so they're never the right captain pick in practice.
+
+    Among outfield players, a captaincy-specific ceiling multiplier is
+    applied on top of raw expected points: attackers > midfielders >
+    defenders. This reflects that captaincy value isn't just about average
+    expected points — it's about upside. A defender and a forward can have
+    similar average output, but the forward's spike potential (brace +
+    assist + bonus) is much higher, which matters specifically because the
+    armband doubles whatever happens. The multiplier nudges the choice
+    toward that reality without rigidly overriding a genuinely large
+    expected-points gap in a defender's favor.
     """
     outfield = [p for p in starters if p["element_type"] != 1]
-    ranked = sorted(outfield, key=lambda p: -ep_scores.get(p["id"], 0))
+    ranked = sorted(
+        outfield,
+        key=lambda p: -(ep_scores.get(p["id"], 0) * CAPTAINCY_CEILING_MULTIPLIER.get(p["element_type"], 1.0)),
+    )
     return ranked[0]["id"], ranked[1]["id"]
 
 
