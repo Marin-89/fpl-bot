@@ -128,8 +128,8 @@
       272,
       528
     ],
-    "captain_id": 1,
-    "vice_captain_id": 4
+    "captain_id": 4,
+    "vice_captain_id": 426
   },
   "chips": {
     "wildcard_1": {
@@ -161,5 +161,5 @@
     "xi_ids": []
   },
   "gameweek_history": [],
-  "last_updated": "2026-08-16T10:14:15.478259+00:00"
+  "last_updated": "2026-08-16T10:19:09.214782+00:00"
 }
