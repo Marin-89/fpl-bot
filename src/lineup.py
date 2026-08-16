@@ -63,6 +63,8 @@ def best_formation_and_xi(squad: list[dict], scores: dict) -> tuple[tuple[int, i
     """
     Tries every legal formation against the fixed squad, returns the
     (formation, starting_xi) combination with the highest total score.
+    Uses the position-normalized 'scores' — correct here, since we're
+    comparing e.g. defender vs defender for a starting slot, not captaincy.
     """
     gk = sorted([p for p in squad if p["element_type"] == 1], key=lambda p: -scores.get(p["id"], 0))
     defs = sorted([p for p in squad if p["element_type"] == 2], key=lambda p: -scores.get(p["id"], 0))
@@ -86,16 +88,20 @@ def best_formation_and_xi(squad: list[dict], scores: dict) -> tuple[tuple[int, i
     return best_formation, best_xi
 
 
-def pick_captain_vice(starters: list[dict], scores: dict) -> tuple[int, int]:
+def pick_captain_vice(starters: list[dict], ep_scores: dict) -> tuple[int, int]:
     """
-    Captain and vice-captain are chosen from outfield players only (DEF/MID/FWD).
-    Goalkeepers are excluded even if they score highest in the model — a keeper's
-    points ceiling is far lower than an attacker's on a good day, so captaining
-    one is essentially always the wrong real-world call regardless of what a
-    single-gameweek score comparison suggests.
+    Captain and vice-captain are chosen by raw expected points (ep_scores —
+    see scoring.raw_expected_points), which is comparable across ALL
+    positions, not the position-normalized 'scores' used elsewhere in this
+    file. Goalkeepers are still excluded: even on a genuinely comparable
+    expected-points scale, a keeper's realistic ceiling in a single game is
+    far below an attacker's, so they're never the right captain pick in
+    practice — but among the outfield players, this now correctly compares
+    "who has the highest expected points overall", not "who stands out most
+    within their own position group".
     """
     outfield = [p for p in starters if p["element_type"] != 1]
-    ranked = sorted(outfield, key=lambda p: -scores.get(p["id"], 0))
+    ranked = sorted(outfield, key=lambda p: -ep_scores.get(p["id"], 0))
     return ranked[0]["id"], ranked[1]["id"]
 
 
