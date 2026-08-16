@@ -110,17 +110,17 @@
     "bank": 0.0,
     "formation": "4-4-2",
     "starting_xi_ids": [
+      480,
       1,
       4,
-      388,
       389,
+      388,
       229,
+      165,
       426,
-      480,
-      13,
-      368,
       106,
-      165
+      13,
+      368
     ],
     "bench_ids": [
       109,
@@ -155,6 +155,21 @@
   },
   "free_transfers": 1,
   "transfer_history": [],
+  "live_message": {
+    "gameweek": 1,
+    "message_id": 16,
+    "text": "*Predicted Lineup \u2013 Week 1*\n\n*Goalkeeper*\nGK \u2014 Raya\n\n*Defence*\nLB \u2014 Gabriel (VC)\nLCB \u2014 Matheus N.\nRCB \u2014 Gu\u00e9hi\nRB \u2014 Tarkowski\n\n*Midfield*\nLM \u2014 Gibbs-White\nLCM \u2014 B.Fernandes (C)\nRCM \u2014 Rice\nRM \u2014 Szoboszlai\n\n*Attack*\nLST \u2014 Jo\u00e3o Pedro\nRST \u2014 Thiago\n\n*Bench*\n1. GK \u2014 Verbruggen\n2. MID \u2014 Berge\n3. FWD \u2014 Kusi-Asare\n4. DEF \u2014 Diop\n\n_No changes from the previous lineup._",
+    "_last_stage": "predicted"
+  },
+  "last_known_deadline": {
+    "gameweek": 1,
+    "deadline_time": "2026-08-21T17:30:00Z",
+    "first_kickoff": "2026-08-21T19:00:00Z"
+  },
+  "gameweek_history": [],
+  "processing": false,
+  "telegram_offset": 310227979,
+  "last_updated": "2026-08-16T12:03:25.345830+00:00",
   "last_lineup_sent": {
     "gameweek": 1,
     "stage": "predicted",
@@ -171,9 +186,5 @@
       13,
       368
     ]
-  },
-  "gameweek_history": [],
-  "last_updated": "2026-08-16T11:51:34.175331+00:00",
-  "processing": false,
-  "telegram_offset": 310227979
+  }
 }
