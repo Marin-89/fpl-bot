@@ -3,7 +3,39 @@ Post-gameweek review: logs predicted vs actual points automatically (free,
 deterministic). Deeper strategic review ("was this the right call, what
 should we learn") happens in a weekly chat with Claude, using this log as
 the input — see README.
+
+Points-lock guard: as of 2026/27, Gameweek points are locked and marked
+final at 9am UK time on the day after the final match of the Gameweek (not
+one hour after full time, as in previous seasons). Running the review
+before that lock means comparing against provisional numbers that could
+still shift — so review.py checks this before logging anything.
 """
+from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
+
+from .deadlines import parse_iso
+
+UK_TZ = ZoneInfo("Europe/London")
+
+
+def gameweek_points_locked(fixtures_for_event: list[dict]) -> tuple[bool, str]:
+    """
+    Returns (locked, message). locked=False means it's too early to trust
+    the numbers yet — caller should wait and try again later.
+    """
+    if not fixtures_for_event:
+        return False, "No fixtures found for this gameweek yet."
+
+    if not all(f.get("finished") for f in fixtures_for_event):
+        return False, "Not all matches in this gameweek have finished yet."
+
+    last_kickoff = max(parse_iso(f["kickoff_time"]) for f in fixtures_for_event)
+    lock_time_uk = last_kickoff.astimezone(UK_TZ).replace(hour=9, minute=0, second=0, microsecond=0) + timedelta(days=1)
+    now_uk = datetime.now(timezone.utc).astimezone(UK_TZ)
+
+    if now_uk < lock_time_uk:
+        return False, f"Points lock at 9am UK on {lock_time_uk.date()} — not reached yet, numbers may still be provisional."
+    return True, "Points are final."
 
 
 def log_gameweek_result(
@@ -29,13 +61,6 @@ def log_gameweek_result(
 
 
 def backtest_weight_signal(history: list[dict]) -> dict:
-    """
-    Very simple accuracy tracking over time: mean absolute error and whether
-    the model has been over- or under-predicting recently. This is the
-    "real, bounded adaptation" piece — it doesn't rewrite the model on its
-    own, but gives concrete numbers to discuss (and adjust weights from) in
-    the weekly review.
-    """
     if not history:
         return {"mean_abs_error": None, "bias": None, "n_gameweeks": 0}
 
