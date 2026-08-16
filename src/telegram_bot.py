@@ -48,7 +48,8 @@ def format_lineup_message(
 
     lines.append("*Bench*")
     for i, p in enumerate(bench, start=1):
-        lines.append(f"{i}. {p['web_name']}")
+        label = p.get("_group", "?")
+        lines.append(f"{i}. {label} — {p['web_name']}")
     lines.append("")
 
     if changes:
