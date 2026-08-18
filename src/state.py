@@ -19,6 +19,8 @@ DEFAULT_STATE = {
         "bench_ids": [],
         "captain_id": None,
         "vice_captain_id": None,
+        "override_captain_id": None,
+        "override_vice_captain_id": None,
     },
     "chips": {
         "wildcard_1": {"used": False, "gameweek": None},
@@ -66,6 +68,10 @@ def load_state() -> dict:
     ):
         if key not in loaded:
             merged[key] = DEFAULT_STATE[key]
+    if "squad" in loaded:
+        merged_squad = json.loads(json.dumps(DEFAULT_STATE["squad"]))
+        merged_squad.update(loaded["squad"])
+        merged["squad"] = merged_squad
     return merged
 
 
