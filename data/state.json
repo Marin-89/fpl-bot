@@ -43,7 +43,7 @@
       },
       {
         "id": 165,
-        "name": "João Pedro",
+        "name": "Jo\u00e3o Pedro",
         "element_type": 4,
         "team": 6,
         "price_bought": 7.5,
@@ -59,7 +59,7 @@
       },
       {
         "id": 124,
-        "name": "Groß",
+        "name": "Gro\u00df",
         "element_type": 3,
         "team": 5,
         "price_bought": 5.5,
@@ -91,7 +91,7 @@
       },
       {
         "id": 388,
-        "name": "Guéhi",
+        "name": "Gu\u00e9hi",
         "element_type": 2,
         "team": 15,
         "price_bought": 6.0,
@@ -186,7 +186,7 @@
     {
       "gameweek": 1,
       "out": "Berge",
-      "in": "Groß",
+      "in": "Gro\u00df",
       "hit": false,
       "reason": "Manual pre-deadline transfer - upgrade, confirmed penalty/set-piece duty"
     },
@@ -219,7 +219,7 @@
   "gameweek_history": [],
   "processing": false,
   "telegram_offset": 310227982,
-  "last_updated": "2026-08-18T01:38:55.452534+00:00",
+  "last_updated": "2026-08-18T02:08:56.840938+00:00",
   "pending_command": null,
   "last_lineup_sent": {
     "gameweek": 1,
