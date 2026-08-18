@@ -144,7 +144,7 @@
       389
     ],
     "captain_id": 426,
-    "vice_captain_id": 165
+    "vice_captain_id": 4
   },
   "chips": {
     "wildcard_1": {
@@ -219,7 +219,7 @@
   "gameweek_history": [],
   "processing": false,
   "telegram_offset": 310227983,
-  "last_updated": "2026-08-18T04:56:08.986269+00:00",
+  "last_updated": "2026-08-18T05:03:42.571227+00:00",
   "pending_command": null,
   "last_lineup_sent": {
     "gameweek": 1,
