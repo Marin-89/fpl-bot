@@ -8,6 +8,13 @@ in place. A NEW message (an alert) is only sent when something actually
 worth your attention happens: a material lineup change, entering the Final
 Confirmed window, a detected FPL deadline/fixture reschedule, or a flagged
 chip opportunity (checked once per day, not every scheduler tick).
+
+Captain/vice-captain: the algorithm recalculates these every run based on
+live data. If the user has manually set override_captain_id or
+override_vice_captain_id in state["squad"], that choice is used instead,
+as long as the chosen player is still in the starting XI that run — if
+they're ever benched or sold, the override stops applying automatically
+and the algorithm takes back over.
 """
 import argparse
 from datetime import datetime, timezone
@@ -95,7 +102,6 @@ def _run_daily_inner(state: dict):
     if not check["consistent"]:
         print(f"WARNING: deadline/kickoff mismatch of {check['diff_minutes']:.0f} min — verify manually.")
 
-    # --- Deadline/kickoff change detection: alert immediately if FPL moved something ---
     last_known = state.get("last_known_deadline", {})
     if (
         last_known.get("gameweek") == target_event["id"]
@@ -111,10 +117,8 @@ def _run_daily_inner(state: dict):
         "gameweek": target_event["id"], "deadline_time": deadline_time, "first_kickoff": first_kickoff,
     }
 
-    # --- Free transfer accumulation for this gameweek ---
     transfers.advance_gameweek_free_transfers(state, target_event["id"])
 
-    # --- Chip expiry warning (first-half chips expire at GW19, don't carry over) ---
     expiring = chips_mod.expiring_soon(state["chips"], target_event["id"])
     if expiring and target_event["id"] not in state.get("chip_expiry_warned", []):
         chip_names = ", ".join(k.replace("_1", "").replace("_", " ").title() for k in expiring)
@@ -146,7 +150,6 @@ def _run_daily_inner(state: dict):
 
     by_id = {p["id"]: p for p in bootstrap["elements"]}
 
-    # --- Sell price update for every squad player, using current market price ---
     for p in state["squad"]["players"]:
         live = by_id.get(p["id"])
         if live:
@@ -165,7 +168,13 @@ def _run_daily_inner(state: dict):
     final_starters = starters if should_change else [by_id[pid] for pid in previous_xi_ids if pid in by_id]
     final_formation = formation if should_change else _formation_from_ids(previous_xi_ids, by_id)
 
-    captain_id, vice_id = lineup.pick_captain_vice(final_starters, ep_scores)
+    algo_captain_id, algo_vice_id = lineup.pick_captain_vice(final_starters, ep_scores)
+    override_captain = state["squad"].get("override_captain_id")
+    override_vice = state["squad"].get("override_vice_captain_id")
+    starter_ids_set = {p["id"] for p in final_starters}
+    captain_id = override_captain if override_captain and override_captain in starter_ids_set else algo_captain_id
+    vice_id = override_vice if override_vice and override_vice in starter_ids_set else algo_vice_id
+
     labeled = lineup.label_positions(final_starters, final_formation)
     for p in labeled:
         p["_group"] = {1: "GK", 2: "DEF", 3: "MID", 4: "FWD"}[p["element_type"]]
@@ -177,7 +186,6 @@ def _run_daily_inner(state: dict):
         for p in bench_players
     ]
 
-    # --- Daily chip opportunity check (once per calendar day, not every scheduler tick) ---
     today_str = now.date().isoformat()
     if state.get("chip_check_last_date") != today_str:
         budget_estimate = state["squad"]["bank"] + sum(
@@ -256,14 +264,6 @@ def _run_daily_inner(state: dict):
 
 
 def run_manual_lineup():
-    """
-    On-demand lineup, triggered by typing 'lineup' in Telegram (see
-    telegram_listener.py) or by running this mode directly. Unlike
-    run_daily, this always computes and sends the current lineup regardless
-    of deadline stage or whether an identical message was already sent —
-    it's an explicit request, so the usual silence-on-no-change rule
-    doesn't apply here.
-    """
     state = state_mod.load_state()
     if not state["squad"]["players"]:
         telegram_bot.send_message("No squad found yet — run Build Initial Squad first.")
@@ -298,7 +298,14 @@ def run_manual_lineup():
         squad_players = [by_id[pid] for pid in squad_ids if pid in by_id]
 
         formation, starters = lineup.best_formation_and_xi(squad_players, scores)
-        captain_id, vice_id = lineup.pick_captain_vice(starters, ep_scores)
+
+        algo_captain_id, algo_vice_id = lineup.pick_captain_vice(starters, ep_scores)
+        override_captain = state["squad"].get("override_captain_id")
+        override_vice = state["squad"].get("override_vice_captain_id")
+        starter_ids_set = {p["id"] for p in starters}
+        captain_id = override_captain if override_captain and override_captain in starter_ids_set else algo_captain_id
+        vice_id = override_vice if override_vice and override_vice in starter_ids_set else algo_vice_id
+
         labeled = lineup.label_positions(starters, formation)
         for p in labeled:
             p["_group"] = {1: "GK", 2: "DEF", 3: "MID", 4: "FWD"}[p["element_type"]]
