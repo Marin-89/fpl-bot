@@ -212,8 +212,9 @@
     "first_kickoff": "2026-08-28T19:00:00Z"
   },
   "chip_expiry_warned": [],
-  "chip_check_last_date": "2026-08-22",
+  "chip_check_last_date": "2026-08-23",
   "captain_ep_history": [
+    4.0,
     4.0,
     4.0,
     4.0,
@@ -225,7 +226,7 @@
   "gameweek_history": [],
   "processing": false,
   "telegram_offset": 310227991,
-  "last_updated": "2026-08-23T00:26:23.318911+00:00",
+  "last_updated": "2026-08-23T01:47:24.506852+00:00",
   "pending_command": null,
   "last_lineup_sent": {
     "gameweek": 1,
