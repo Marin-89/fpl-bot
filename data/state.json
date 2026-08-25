@@ -43,7 +43,7 @@
       },
       {
         "id": 165,
-        "name": "João Pedro",
+        "name": "Jo\u00e3o Pedro",
         "element_type": 4,
         "team": 6,
         "price_bought": 7.5,
@@ -59,7 +59,7 @@
       },
       {
         "id": 124,
-        "name": "Groß",
+        "name": "Gro\u00df",
         "element_type": 3,
         "team": 5,
         "price_bought": 5.5,
@@ -91,7 +91,7 @@
       },
       {
         "id": 388,
-        "name": "Guéhi",
+        "name": "Gu\u00e9hi",
         "element_type": 2,
         "team": 15,
         "price_bought": 6.0,
@@ -149,20 +149,56 @@
     "override_vice_captain_id": 165
   },
   "chips": {
-    "wildcard_1": {"used": false, "gameweek": null},
-    "wildcard_2": {"used": false, "gameweek": null},
-    "free_hit_1": {"used": false, "gameweek": null},
-    "free_hit_2": {"used": false, "gameweek": null},
-    "bench_boost_1": {"used": false, "gameweek": null},
-    "bench_boost_2": {"used": false, "gameweek": null},
-    "triple_captain_1": {"used": false, "gameweek": null},
-    "triple_captain_2": {"used": false, "gameweek": null}
+    "wildcard_1": {
+      "used": false,
+      "gameweek": null
+    },
+    "wildcard_2": {
+      "used": false,
+      "gameweek": null
+    },
+    "free_hit_1": {
+      "used": false,
+      "gameweek": null
+    },
+    "free_hit_2": {
+      "used": false,
+      "gameweek": null
+    },
+    "bench_boost_1": {
+      "used": false,
+      "gameweek": null
+    },
+    "bench_boost_2": {
+      "used": false,
+      "gameweek": null
+    },
+    "triple_captain_1": {
+      "used": false,
+      "gameweek": null
+    },
+    "triple_captain_2": {
+      "used": false,
+      "gameweek": null
+    }
   },
   "free_transfers": 1,
   "last_processed_gameweek": 1,
   "transfer_history": [
-    {"gameweek": 1, "out": "Berge", "in": "Groß", "hit": false, "reason": "Manual pre-deadline transfer"},
-    {"gameweek": 1, "out": "Verbruggen", "in": "Dubravka", "hit": false, "reason": "Manual pre-deadline transfer"}
+    {
+      "gameweek": 1,
+      "out": "Berge",
+      "in": "Gro\u00df",
+      "hit": false,
+      "reason": "Manual pre-deadline transfer"
+    },
+    {
+      "gameweek": 1,
+      "out": "Verbruggen",
+      "in": "Dubravka",
+      "hit": false,
+      "reason": "Manual pre-deadline transfer"
+    }
   ],
   "live_message": {
     "gameweek": 2,
@@ -177,15 +213,31 @@
   },
   "chip_expiry_warned": [],
   "chip_check_last_date": "2026-08-18",
-  "captain_ep_history": [4.0, 4.0, 4.0],
+  "captain_ep_history": [
+    4.0,
+    4.0,
+    4.0
+  ],
   "gameweek_history": [],
   "processing": false,
-  "telegram_offset": 310227986,
-  "last_updated": "2026-08-18T10:13:54.943812+00:00",
+  "telegram_offset": 310227993,
+  "last_updated": "2026-08-25T16:06:37.479920+00:00",
   "pending_command": null,
   "last_lineup_sent": {
     "gameweek": 1,
     "stage": "predicted",
-    "xi_ids": [480, 1, 4, 389, 388, 229, 165, 426, 106, 13, 368]
+    "xi_ids": [
+      480,
+      1,
+      4,
+      389,
+      388,
+      229,
+      165,
+      426,
+      106,
+      13,
+      368
+    ]
   }
-      }
+}
