@@ -123,13 +123,13 @@
       }
     ],
     "bank": 0.0,
-    "formation": "3-5-2",
+    "formation": "4-4-2",
     "starting_xi_ids": [
-      480,
       1,
       4,
       229,
       388,
+      389,
       165,
       426,
       106,
@@ -141,7 +141,7 @@
       497,
       272,
       259,
-      389
+      480
     ],
     "captain_id": 426,
     "vice_captain_id": 165,
@@ -182,8 +182,8 @@
       "gameweek": null
     }
   },
-  "free_transfers": 1,
-  "last_processed_gameweek": 1,
+  "free_transfers": 2,
+  "last_processed_gameweek": 2,
   "transfer_history": [
     {
       "gameweek": 1,
@@ -203,17 +203,18 @@
   "live_message": {
     "gameweek": 2,
     "message_id": 16,
-    "text": null,
+    "text": "*Predicted Lineup \u2013 Week 2*\n\n*Goalkeeper*\nGK \u2014 Raya\n\n*Defence*\nLB \u2014 Gabriel\nLCB \u2014 Gu\u00e9hi\nRCB \u2014 Tarkowski\nRB \u2014 Matheus N.\n\n*Midfield*\nLM \u2014 B.Fernandes (C)\nLCM \u2014 Szoboszlai\nRCM \u2014 Rice\nRM \u2014 Gro\u00df\n\n*Attack*\nLST \u2014 Jo\u00e3o Pedro (VC)\nRST \u2014 Thiago\n\n*Bench*\n1. GK \u2014 Dubravka\n2. FWD \u2014 Kusi-Asare\n3. DEF \u2014 Diop\n4. MID \u2014 Gibbs-White\n\n*What changed*\n- Gibbs-White \u2192 Matheus N.: score improved beyond stability threshold",
     "_last_stage": "predicted"
   },
   "last_known_deadline": {
     "gameweek": 2,
-    "deadline_time": "2026-08-29T00:30:00Z",
-    "first_kickoff": "2026-08-29T00:00:00Z"
+    "deadline_time": "2026-08-28T17:30:00Z",
+    "first_kickoff": "2026-08-28T19:00:00Z"
   },
   "chip_expiry_warned": [],
-  "chip_check_last_date": "2026-08-18",
+  "chip_check_last_date": "2026-08-25",
   "captain_ep_history": [
+    4.0,
     4.0,
     4.0,
     4.0
@@ -221,7 +222,7 @@
   "gameweek_history": [],
   "processing": false,
   "telegram_offset": 310227993,
-  "last_updated": "2026-08-25T16:06:37.479920+00:00",
+  "last_updated": "2026-08-25T16:09:49.679242+00:00",
   "pending_command": null,
   "last_lineup_sent": {
     "gameweek": 1,
