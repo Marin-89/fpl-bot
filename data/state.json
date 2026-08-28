@@ -123,8 +123,9 @@
       }
     ],
     "bank": 0.0,
-    "formation": "3-4-3",
+    "formation": "3-5-2",
     "starting_xi_ids": [
+      480,
       1,
       4,
       229,
@@ -134,14 +135,13 @@
       106,
       13,
       368,
-      272,
       124
     ],
     "bench_ids": [
       497,
+      272,
       259,
-      389,
-      480
+      389
     ],
     "captain_id": 426,
     "vice_captain_id": 165,
@@ -203,8 +203,8 @@
   "live_message": {
     "gameweek": 2,
     "message_id": 16,
-    "text": "*Predicted Lineup \u2013 Week 2*\n\n*Goalkeeper*\nGK \u2014 Raya\n\n*Defence*\nLCB \u2014 Gabriel\nCB \u2014 Tarkowski\nRCB \u2014 Gu\u00e9hi\n\n*Midfield*\nLM \u2014 B.Fernandes (C)\nLCM \u2014 Rice\nRCM \u2014 Szoboszlai\nRM \u2014 Gro\u00df\n\n*Attack*\nLST \u2014 Jo\u00e3o Pedro (VC)\nCST \u2014 Thiago\nRST \u2014 Kusi-Asare\n\n*Bench*\n1. GK \u2014 Dubravka\n2. DEF \u2014 Diop\n3. DEF \u2014 Matheus N.\n4. MID \u2014 Gibbs-White\n\n_No changes from the previous lineup._",
-    "_last_stage": "predicted"
+    "text": "*Final Confirmed Lineup \u2013 Week 2*\n\n*Goalkeeper*\nGK \u2014 Raya\n\n*Defence*\nLCB \u2014 Gabriel\nCB \u2014 Gu\u00e9hi\nRCB \u2014 Tarkowski\n\n*Midfield*\nLM \u2014 B.Fernandes (C)\nLCM \u2014 Szoboszlai\nCM \u2014 Gibbs-White\nRCM \u2014 Rice\nRM \u2014 Gro\u00df\n\n*Attack*\nLST \u2014 Jo\u00e3o Pedro (VC)\nRST \u2014 Thiago\n\n*Bench*\n1. GK \u2014 Dubravka\n2. FWD \u2014 Kusi-Asare\n3. DEF \u2014 Diop\n4. DEF \u2014 Matheus N.\n\n*What changed*\n- Kusi-Asare \u2192 Gibbs-White: score improved beyond stability threshold",
+    "_last_stage": "final_window"
   },
   "last_known_deadline": {
     "gameweek": 2,
@@ -225,7 +225,7 @@
   "gameweek_history": [],
   "processing": false,
   "telegram_offset": 310227995,
-  "last_updated": "2026-08-28T05:34:26.794570+00:00",
+  "last_updated": "2026-08-28T16:39:24.769279+00:00",
   "pending_command": null,
   "last_lineup_sent": {
     "gameweek": 1,
