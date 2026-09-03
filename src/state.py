@@ -21,6 +21,8 @@ DEFAULT_STATE = {
         "vice_captain_id": None,
         "override_captain_id": None,
         "override_vice_captain_id": None,
+        "locked_start_ids": [],
+        "locked_bench_ids": [],
     },
     "chips": {
         "wildcard_1": {"used": False, "gameweek": None},
