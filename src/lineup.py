@@ -3,8 +3,12 @@ Given a fixed 15-man squad, picks the best starting XI + bench order for
 THIS gameweek, applies the stability rule against the previously sent
 lineup, and labels every player with an exact tactical position.
 
-This is what runs daily — squad_builder.py only runs once, at Gameweek 1
-(or when a high-conviction transfer is made).
+Manual locks: the user can force a player to start (locked_start) or force
+them to the bench (locked_bench) via state["squad"]. These are respected on
+every run — the algorithm fills the remaining slots around them, the same
+way captain/vice overrides already work. Locks persist until the user
+clears them; if a locked player is ever sold or otherwise leaves the
+squad, the lock has no effect (nothing to enforce).
 """
 
 LEGAL_FORMATIONS = [
@@ -12,13 +16,6 @@ LEGAL_FORMATIONS = [
     (4, 5, 1), (5, 4, 1), (5, 3, 2), (5, 2, 3),
 ]
 
-# Soft nudge toward historically stronger FPL formations, based on 2025/26
-# Top 50 manager usage data (3-4-3/3-5-2 remain elite; DEFCON made 4-4-2/
-# 4-3-3 legitimate; 5-defender shapes remain generally weak since a 5th
-# defender's return rarely beats what a midfielder slot would produce over
-# a season). This is a preference, not a rule — a genuinely large expected-
-# points gap in the raw scores can still override it, since a bad squad
-# shouldn't be forced into a "good" formation it doesn't have the players for.
 FORMATION_PREFERENCE = {
     (3, 5, 2): 1.05,
     (3, 4, 3): 1.05,
@@ -53,18 +50,13 @@ STABILITY_THRESHOLD = 0.08
 TRANSFER_CONVICTION_THRESHOLD = 0.15
 
 CAPTAINCY_CEILING_MULTIPLIER = {
-    4: 1.15,  # FWD — highest upside/ceiling, favored most for captaincy
-    3: 1.08,  # MID
-    2: 1.00,  # DEF — solid average, but lower ceiling than attackers
+    4: 1.15,
+    3: 1.08,
+    2: 1.00,
 }
 
 
 def label_positions(starters: list[dict], formation: tuple[int, int, int]) -> list[dict]:
-    """
-    starters: list of player dicts (must include 'element_type' and 'web_name'),
-    already sorted GK, DEF..., MID..., FWD... in squad order.
-    Returns the same players annotated with a 'tactical_position' label.
-    """
     def_count, mid_count, fwd_count = formation
     gk = [p for p in starters if p["element_type"] == 1]
     defs = [p for p in starters if p["element_type"] == 2]
@@ -83,25 +75,44 @@ def label_positions(starters: list[dict], formation: tuple[int, int, int]) -> li
     return labeled
 
 
-def best_formation_and_xi(squad: list[dict], scores: dict) -> tuple[tuple[int, int, int], list[dict]]:
+def _position_pool(squad: list[dict], scores: dict, etype: int, locked_start: set, locked_bench: set) -> list[dict]:
+    """
+    Players of this position, with locked-to-start players placed first
+    (guaranteeing inclusion when the caller slices the top N), locked-to-bench
+    players excluded entirely, and everyone else sorted by score.
+    """
+    players = [p for p in squad if p["element_type"] == etype and p["id"] not in locked_bench]
+    forced = [p for p in players if p["id"] in locked_start]
+    rest = [p for p in players if p["id"] not in locked_start]
+    rest.sort(key=lambda p: -scores.get(p["id"], 0))
+    return forced + rest
+
+
+def best_formation_and_xi(
+    squad: list[dict],
+    scores: dict,
+    locked_start: set | None = None,
+    locked_bench: set | None = None,
+) -> tuple[tuple[int, int, int], list[dict]]:
     """
     Tries every legal formation against the fixed squad, returns the
-    (formation, starting_xi) combination with the highest PREFERENCE-ADJUSTED
-    score — see FORMATION_PREFERENCE above. Uses the position-normalized
-    'scores' for the underlying comparison, since we're comparing e.g.
-    defender vs defender for a starting slot, not captaincy.
+    (formation, starting_xi) combination with the highest preference-adjusted
+    score, honoring any manual start/bench locks.
     """
-    gk = sorted([p for p in squad if p["element_type"] == 1], key=lambda p: -scores.get(p["id"], 0))
-    defs = sorted([p for p in squad if p["element_type"] == 2], key=lambda p: -scores.get(p["id"], 0))
-    mids = sorted([p for p in squad if p["element_type"] == 3], key=lambda p: -scores.get(p["id"], 0))
-    fwds = sorted([p for p in squad if p["element_type"] == 4], key=lambda p: -scores.get(p["id"], 0))
+    locked_start = locked_start or set()
+    locked_bench = locked_bench or set()
+
+    gk = _position_pool(squad, scores, 1, locked_start, locked_bench)
+    defs = _position_pool(squad, scores, 2, locked_start, locked_bench)
+    mids = _position_pool(squad, scores, 3, locked_start, locked_bench)
+    fwds = _position_pool(squad, scores, 4, locked_start, locked_bench)
 
     best_adjusted_total = -1.0
     best_formation = None
     best_xi = None
 
     for d, m, f in LEGAL_FORMATIONS:
-        if len(defs) < d or len(mids) < m or len(fwds) < f:
+        if len(defs) < d or len(mids) < m or len(fwds) < f or len(gk) < 1:
             continue
         xi = gk[:1] + defs[:d] + mids[:m] + fwds[:f]
         raw_total = sum(scores.get(p["id"], 0) for p in xi)
@@ -115,22 +126,6 @@ def best_formation_and_xi(squad: list[dict], scores: dict) -> tuple[tuple[int, i
 
 
 def pick_captain_vice(starters: list[dict], ep_scores: dict) -> tuple[int, int]:
-    """
-    Captain and vice-captain are chosen by raw expected points (ep_scores —
-    see scoring.raw_expected_points), which is comparable across ALL
-    positions, not the position-normalized 'scores' used elsewhere in this
-    file. Goalkeepers are excluded entirely: even on a fair expected-points
-    scale, a keeper's realistic ceiling in a single game is far below an
-    attacker's, so they're never the right captain pick in practice.
-
-    Among outfield players, a captaincy-specific ceiling multiplier is
-    applied on top of raw expected points: attackers > midfielders >
-    defenders. This reflects that captaincy value isn't just about average
-    expected points — it's about upside. A defender and a forward can have
-    similar average output, but the forward's spike potential (brace +
-    assist + bonus) is much higher, which matters specifically because the
-    armband doubles whatever happens.
-    """
     outfield = [p for p in starters if p["element_type"] != 1]
     ranked = sorted(
         outfield,
@@ -145,11 +140,6 @@ def apply_stability_rule(
     new_total_score: float,
     previous_total_score: float,
 ) -> bool:
-    """
-    Returns True if the change is worth making (recommend it), False if the
-    improvement is too marginal and we should hold the previous lineup.
-    Only meaningful when previous_xi_ids is non-empty (i.e. not GW1).
-    """
     if not previous_xi_ids:
         return True
     if new_xi_ids == previous_xi_ids:
