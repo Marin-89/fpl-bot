@@ -234,8 +234,8 @@
   ],
   "gameweek_history": [],
   "processing": false,
-  "telegram_offset": 310227986,
-  "last_updated": "2026-09-03T05:04:33.770498+00:00",
+  "telegram_offset": 310228000,
+  "last_updated": "2026-09-03T05:08:40.715241+00:00",
   "pending_command": null,
   "last_lineup_sent": {
     "gameweek": 1,
