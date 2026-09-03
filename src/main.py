@@ -9,12 +9,10 @@ worth your attention happens: a material lineup change, entering the Final
 Confirmed window, a detected FPL deadline/fixture reschedule, or a flagged
 chip opportunity (checked once per day, not every scheduler tick).
 
-Captain/vice-captain: the algorithm recalculates these every run based on
-live data. If the user has manually set override_captain_id or
-override_vice_captain_id in state["squad"], that choice is used instead,
-as long as the chosen player is still in the starting XI that run — if
-they're ever benched or sold, the override stops applying automatically
-and the algorithm takes back over.
+Manual locks: state["squad"]["locked_start_ids"] / "locked_bench_ids" force
+a specific player to start or bench regardless of what the algorithm would
+otherwise pick — same idea as the captain/vice override, just for lineup
+slots. These persist until manually cleared.
 """
 import argparse
 from datetime import datetime, timezone
@@ -158,13 +156,23 @@ def _run_daily_inner(state: dict):
     squad_ids = [pl["id"] for pl in state["squad"]["players"]]
     squad_players = [by_id[pid] for pid in squad_ids if pid in by_id]
 
-    formation, starters = lineup.best_formation_and_xi(squad_players, scores)
+    locked_start = set(state["squad"].get("locked_start_ids", []))
+    locked_bench = set(state["squad"].get("locked_bench_ids", []))
+
+    formation, starters = lineup.best_formation_and_xi(squad_players, scores, locked_start, locked_bench)
     new_xi_ids = {p["id"] for p in starters}
     previous_xi_ids = set(state["squad"]["starting_xi_ids"])
     new_total = sum(scores.get(pid, 0) for pid in new_xi_ids)
     previous_total = sum(scores.get(pid, 0) for pid in previous_xi_ids)
 
-    should_change = lineup.apply_stability_rule(new_xi_ids, previous_xi_ids, new_total, previous_total)
+    # If any lock is active, always honor the locked lineup rather than
+    # comparing against the stability threshold — a lock is an explicit,
+    # deliberate instruction, not something that should be "outvoted" by a
+    # marginal score improvement elsewhere.
+    has_active_locks = bool(locked_start or locked_bench)
+    should_change = True if has_active_locks else lineup.apply_stability_rule(
+        new_xi_ids, previous_xi_ids, new_total, previous_total
+    )
     final_starters = starters if should_change else [by_id[pid] for pid in previous_xi_ids if pid in by_id]
     final_formation = formation if should_change else _formation_from_ids(previous_xi_ids, by_id)
 
@@ -297,7 +305,10 @@ def run_manual_lineup():
         squad_ids = [pl["id"] for pl in state["squad"]["players"]]
         squad_players = [by_id[pid] for pid in squad_ids if pid in by_id]
 
-        formation, starters = lineup.best_formation_and_xi(squad_players, scores)
+        locked_start = set(state["squad"].get("locked_start_ids", []))
+        locked_bench = set(state["squad"].get("locked_bench_ids", []))
+
+        formation, starters = lineup.best_formation_and_xi(squad_players, scores, locked_start, locked_bench)
 
         algo_captain_id, algo_vice_id = lineup.pick_captain_vice(starters, ep_scores)
         override_captain = state["squad"].get("override_captain_id")
