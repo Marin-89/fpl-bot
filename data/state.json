@@ -188,8 +188,8 @@
       "gameweek": null
     }
   },
-  "free_transfers": 2,
-  "last_processed_gameweek": 3,
+  "free_transfers": 3,
+  "last_processed_gameweek": 4,
   "transfer_history": [
     {
       "gameweek": 1,
@@ -220,9 +220,9 @@
     "_last_stage": "predicted"
   },
   "last_known_deadline": {
-    "gameweek": 3,
-    "deadline_time": "2026-09-04T17:30:00Z",
-    "first_kickoff": "2026-09-04T19:00:00Z"
+    "gameweek": 4,
+    "deadline_time": "2026-09-12T12:30:00Z",
+    "first_kickoff": "2026-09-12T14:00:00Z"
   },
   "chip_expiry_warned": [],
   "chip_check_last_date": "2026-09-04",
@@ -236,7 +236,7 @@
   "gameweek_history": [],
   "processing": false,
   "telegram_offset": 310228000,
-  "last_updated": "2026-09-04T17:57:30.019133+00:00",
+  "last_updated": "2026-09-04T19:04:09.772717+00:00",
   "pending_command": null,
   "last_lineup_sent": {
     "gameweek": 1,
@@ -256,9 +256,9 @@
     ]
   },
   "last_sent_lineup_signature": {
-    "gameweek": 3,
+    "gameweek": 4,
     "stage": "predicted",
-    "text": "*Predicted Lineup \u2013 Week 3*\n\n*Goalkeeper*\nGK \u2014 Raya\n\n*Defence*\nLCB \u2014 Tarkowski\nCB \u2014 Gvardiol\nRCB \u2014 Gabriel\n\n*Midfield*\nLM \u2014 B.Fernandes (C)\nLCM \u2014 Gro\u00df\nCM \u2014 Gibbs-White\nRCM \u2014 Szoboszlai\nRM \u2014 Rice\n\n*Attack*\nLST \u2014 Thiago\nRST \u2014 Jo\u00e3o Pedro (VC)\n\n*Bench*\n1. GK \u2014 Dubravka\n2. FWD \u2014 Kusi-Asare\n3. DEF \u2014 Diop\n4. DEF \u2014 Gu\u00e9hi\n\n_No changes from the previous lineup._"
+    "text": "*Predicted Lineup \u2013 Week 4*\n\n*Goalkeeper*\nGK \u2014 Raya\n\n*Defence*\nLCB \u2014 Tarkowski\nCB \u2014 Gvardiol\nRCB \u2014 Gabriel\n\n*Midfield*\nLM \u2014 B.Fernandes (C)\nLCM \u2014 Gro\u00df\nCM \u2014 Gibbs-White\nRCM \u2014 Szoboszlai\nRM \u2014 Rice\n\n*Attack*\nLST \u2014 Thiago\nRST \u2014 Jo\u00e3o Pedro (VC)\n\n*Bench*\n1. GK \u2014 Dubravka\n2. FWD \u2014 Kusi-Asare\n3. DEF \u2014 Diop\n4. DEF \u2014 Gu\u00e9hi\n\n_No changes from the previous lineup._"
   },
   "_last_stage_seen": "predicted"
 }
