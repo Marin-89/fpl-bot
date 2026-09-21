@@ -241,7 +241,7 @@
   "gameweek_history": [],
   "processing": false,
   "telegram_offset": 310228001,
-  "last_updated": "2026-09-21T18:41:54.099042+00:00",
+  "last_updated": "2026-09-21T19:41:58.935605+00:00",
   "pending_command": null,
   "last_lineup_sent": {
     "gameweek": 1,
@@ -263,7 +263,7 @@
   "last_sent_lineup_signature": {
     "gameweek": 6,
     "stage": "predicted",
-    "text": "*Predicted Lineup \u2013 Week 6*\n\n*Goalkeeper*\nGK \u2014 Raya\n\n*Defence*\nLB \u2014 Tarkowski (VC)\nLCB \u2014 Gvardiol\nRCB \u2014 Gabriel\nRB \u2014 Diop\n\n*Midfield*\nLM \u2014 Gro\u00df (C)\nLCM \u2014 B.Fernandes\nRCM \u2014 Gibbs-White\nRM \u2014 Szoboszlai\n\n*Attack*\nLST \u2014 Thiago\nRST \u2014 Kusi-Asare\n\n*Bench*\n1. MID \u2014 Rice\n2. GK \u2014 Dubravka\n3. FWD \u2014 Jo\u00e3o Pedro\n4. DEF \u2014 Gu\u00e9hi\n\n*What changed*\n- Rice \u2192 Diop: score improved beyond stability threshold"
+    "text": "*Predicted Lineup \u2013 Week 6*\n\n*Goalkeeper*\nGK \u2014 Raya\n\n*Defence*\nLB \u2014 Tarkowski (VC)\nLCB \u2014 Gvardiol\nRCB \u2014 Gabriel\nRB \u2014 Diop\n\n*Midfield*\nLM \u2014 Gro\u00df (C)\nLCM \u2014 B.Fernandes\nRCM \u2014 Gibbs-White\nRM \u2014 Szoboszlai\n\n*Attack*\nLST \u2014 Thiago\nRST \u2014 Kusi-Asare\n\n*Bench*\n1. MID \u2014 Rice\n2. GK \u2014 Dubravka\n3. FWD \u2014 Jo\u00e3o Pedro\n4. DEF \u2014 Gu\u00e9hi\n\n_No changes from the previous lineup._"
   },
   "_last_stage_seen": "predicted"
 }
