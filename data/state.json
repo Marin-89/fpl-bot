@@ -23,7 +23,7 @@
         "element_type": 3,
         "team": 1,
         "price_bought": 7.5,
-        "sell_price": 7.3
+        "sell_price": 7.4
       },
       {
         "id": 106,
@@ -87,7 +87,7 @@
         "element_type": 3,
         "team": 14,
         "price_bought": 7.0,
-        "sell_price": 6.8
+        "sell_price": 6.7
       },
       {
         "id": 388,
@@ -241,7 +241,7 @@
   "gameweek_history": [],
   "processing": false,
   "telegram_offset": 310228001,
-  "last_updated": "2026-10-24T21:51:26.866791+00:00",
+  "last_updated": "2026-10-24T23:34:00.459894+00:00",
   "pending_command": null,
   "last_lineup_sent": {
     "gameweek": 1,
