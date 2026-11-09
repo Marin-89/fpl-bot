@@ -47,7 +47,7 @@
         "element_type": 4,
         "team": 6,
         "price_bought": 7.5,
-        "sell_price": 7.6
+        "sell_price": 7.5
       },
       {
         "id": 229,
@@ -225,9 +225,8 @@
     "first_kickoff": "2026-11-21T12:30:00Z"
   },
   "chip_expiry_warned": [],
-  "chip_check_last_date": "2026-11-08",
+  "chip_check_last_date": "2026-11-09",
   "captain_ep_history": [
-    9.0,
     9.0,
     6.8,
     8.2,
@@ -236,12 +235,13 @@
     8.2,
     8.2,
     6.6,
+    8.2,
     8.2
   ],
   "gameweek_history": [],
   "processing": false,
   "telegram_offset": 310228001,
-  "last_updated": "2026-11-08T22:44:51.864104+00:00",
+  "last_updated": "2026-11-09T01:52:45.386008+00:00",
   "pending_command": null,
   "last_lineup_sent": {
     "gameweek": 1,
